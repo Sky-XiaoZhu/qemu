@@ -5221,6 +5221,23 @@ static char *x86_cpuid_get_model_id(Object *obj, Error **errp)
     return value;
 }
 
+static void set_fake_cpuid_model(uint32_t fake_cpuid_model[12])
+{
+    // 这里修改成任何想填的信息
+    const char *fake_model_id = "AMD Ryzen 9 5900X 12-Core Processor @ 3.70 GHz";
+    memset(fake_cpuid_model, 0, 48);
+    int c, len, i;
+    len = strlen(fake_model_id);
+    for (i = 0; i < 48; i++) {
+        if (i >= len) {
+            c = '\0';
+        } else {
+            c = (uint8_t)fake_model_id[i];
+        }
+        fake_cpuid_model[i >> 2] |= c << (8 * (i & 3));
+    }
+}
+
 static void x86_cpuid_set_model_id(Object *obj, const char *model_id,
                                    Error **errp)
 {
@@ -6516,6 +6533,7 @@ void cpu_x86_cpuid(CPUX86State *env, uint32_t index, uint32_t count,
     case 0x80000002:
     case 0x80000003:
     case 0x80000004:
+        set_fake_cpuid_model(env->cpuid_model); // 将CPUID设置成我们需要的
         *eax = env->cpuid_model[(index - 0x80000002) * 4 + 0];
         *ebx = env->cpuid_model[(index - 0x80000002) * 4 + 1];
         *ecx = env->cpuid_model[(index - 0x80000002) * 4 + 2];
